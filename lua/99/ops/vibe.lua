@@ -2,7 +2,6 @@ local make_prompt = require("99.ops.make-prompt")
 local CleanUp = require("99.ops.clean-up")
 local QFixHelpers = require("99.ops.qfix-helpers")
 
-local make_clean_up = CleanUp.make_clean_up
 local make_observer = CleanUp.make_observer
 
 --- @param context _99.Prompt
@@ -37,16 +36,11 @@ local function vibe(context, opts)
   local logger = context.logger:set_area("vibe")
   logger:debug("vibe", "with opts", opts.additional_prompt)
 
-  local clean_up = make_clean_up(function()
-    context:stop()
-  end)
-
   local prompt, refs =
     make_prompt(context, context._99.prompts.prompts.vibe(), opts)
 
   context:add_prompt_content(prompt)
   context:add_references(refs)
-  context:add_clean_up(clean_up)
 
   --- TODO: part of the context request clean up there needs to be a refactoring of
   --- make observer... it really should just be within the context observer creation.
@@ -54,7 +48,7 @@ local function vibe(context, opts)
   --- once cleanup function wrapper.
   ---
   --- i think an interface, CleanUpI could be something that is worth it :)
-  context:start_request(make_observer(clean_up, function(status, response)
+  context:start_request(make_observer(context, function(status, response)
     if status == "cancelled" then
       logger:debug("request cancelled for search")
     elseif status == "failed" then
@@ -65,6 +59,7 @@ local function vibe(context, opts)
       )
     elseif status == "success" then
       finish_vibe(context, response)
+      context._99:sync()
     end
   end))
 end

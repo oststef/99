@@ -31,7 +31,6 @@ local filetype_map = {
 --- @class _99.Prompt.Serialized
 --- @field data _99.Prompt.Data
 --- @field user_prompt string
-
 --- @class _99.Prompt.Data.Search
 --- @field type "search"
 --- @field qfix_items _99.Search.Result[]
@@ -119,6 +118,10 @@ function Prompt.deserialize(_99, data)
     operation = data.data.type,
     user_prompt = data.user_prompt,
     started_at = Time.now(),
+
+    --- we should only sync successful requests
+    state = "success",
+
     xid = get_id(),
   }, Prompt)
   assert(prompt:valid(), "prompt is not valid from data")
@@ -127,6 +130,7 @@ end
 
 --- @return _99.Prompt.Serialized
 function Prompt:serialize()
+  assert(self.state == "success", "you can only serialize successful prompts")
   return {
     data = self.data,
     user_prompt = self.user_prompt,
@@ -371,6 +375,8 @@ end
 
 function Prompt:stop()
   self:cancel()
+  self:clear_marks()
+
   for _, cb in ipairs(self.clean_ups) do
     cb()
   end

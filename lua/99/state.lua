@@ -3,7 +3,7 @@ local Agents = require("99.extensions.agents")
 local Extensions = require("99.extensions")
 local Tracking = require("99.state.tracking")
 
-local _99_STATE_FILE = "99-state"
+local _99_STATE_FILE = "state"
 local function default_completion()
   return { source = nil, custom_rules = {} }
 end

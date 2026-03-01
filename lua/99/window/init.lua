@@ -13,6 +13,7 @@ local M = {
 }
 
 local nsid = vim.api.nvim_create_namespace("99.window.error")
+local legend_nsid = vim.api.nvim_create_namespace("99.window.legend")
 local win_valid = vim.api.nvim_win_is_valid
 local buf_valid = vim.api.nvim_buf_is_valid
 
@@ -403,6 +404,50 @@ local function create_window_legend(win, keymap)
   vim.bo[keymap_win.buf_id].modifiable = true
   vim.bo[keymap_win.buf_id].readonly = false
   vim.api.nvim_buf_set_lines(keymap_win.buf_id, 0, -1, false, lines)
+
+  vim.api.nvim_buf_clear_namespace(keymap_win.buf_id, legend_nsid, 0, -1)
+  for line_num, line in ipairs(lines) do
+    local start_col = 1
+    while true do
+      local found_start, found_end = string.find(line, "%S+=%S+", start_col)
+      if not found_start then
+        break
+      end
+
+      local legend = string.sub(line, found_start, found_end)
+      local separator = string.find(legend, "=", 1, true)
+      if separator and separator > 1 and separator < #legend then
+        local key_start = found_start - 1
+        local key_end = found_start + separator - 2
+        local value_start = found_start + separator - 1
+
+        vim.api.nvim_buf_set_extmark(
+          keymap_win.buf_id,
+          legend_nsid,
+          line_num - 1,
+          key_start,
+          {
+            end_col = key_end,
+            hl_group = "WarningMsg",
+          }
+        )
+
+        vim.api.nvim_buf_set_extmark(
+          keymap_win.buf_id,
+          legend_nsid,
+          line_num - 1,
+          value_start,
+          {
+            end_col = found_end,
+            hl_group = "Comment",
+          }
+        )
+      end
+
+      start_col = found_end + 1
+    end
+  end
+
   vim.bo[keymap_win.buf_id].modifiable = false
   vim.bo[keymap_win.buf_id].readonly = true
 

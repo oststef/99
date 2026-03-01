@@ -108,6 +108,9 @@ end
 function M.craft_prompt(worker)
   return string.format(
     [[
+## Description
+%s
+
 ## You must complete the checklist
 [ ] - Inspect and understand all changed code
  [ ] - git diff
@@ -120,9 +123,6 @@ function M.craft_prompt(worker)
 [ ] - If you see bugs, also report those
 [ ] - if there are tests, run the tests
 
-<Description>
-%s
-</Description>
 ]],
     worker.current_work_item
   )
